@@ -23,6 +23,7 @@ OPTLEVEL = s
 MSG_LINKING = Linking:
 MSG_COMPILING = Compiling:
 MSG_FLASH = Preparing HEX file:
+MSG_EEP = Preparing EEPROM file:
 
 CDEFS =
 CFLAGS = -DF_CPU=$(F_CPU)UL
@@ -42,7 +43,7 @@ AVRDUDE_FLAGS = -p $(AVRDUDE_MCU)
 AVRDUDE_FLAGS += -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += -B $(AVRDUDE_SPEED)
 
-all: $(TARGET).elf $(TARGET).hex size
+all: $(TARGET).elf $(TARGET).hex $(TARGET).eep size
 
 .SECONDARY: $(TARGET).elf
 .PRECIOUS: $(OBJ)
@@ -51,6 +52,11 @@ all: $(TARGET).elf $(TARGET).hex size
 	@echo
 	@echo $(MSG_FLASH) $@
 	$(OBJCOPY) -O $(FORMAT) -j .text -j .data $< $@
+
+%.eep: %.elf
+	@echo
+	@echo $(MSG_EEP) $@
+	$(OBJCOPY) -O $(FORMAT) -j .eeprom --change-section-lma .eeprom=0 $< $@
 
 %.elf: $(OBJ)
 	@echo
@@ -68,10 +74,13 @@ size: $(TARGET).elf
 analyze: $(TARGET).elf
 	$(OBJDUMP) -m avr -D $< | less
 
-isp: $(TARGET).hex
+flash: $(TARGET).hex
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:w:$(TARGET).hex
 
-release: isp
+eeprom: $(TARGET).eep
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U eeprom:w:$(TARGET).eep
+
+release: flash eeprom
 
 clean:
-	$(REMOVE) $(TARGET).hex $(TARGET).elf $(OBJ) $(LST) *~
+	$(REMOVE) $(TARGET).hex $(TARGET).eep $(TARGET).elf $(OBJ) $(LST) *~

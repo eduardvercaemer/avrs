@@ -27,27 +27,14 @@ main (void)
 	;
       adc = ADCH;
       adc = 0xff - adc;
-      adc /= 64;
-      switch (adc)
-	{
-	case 0:
-	  PORTB = _BV(0);
-	  break;
-	case 1:
-	  PORTB = _BV(0)
-	    | _BV(1);
-	  break;
-	case 2:
-	  PORTB = _BV(0)
-	    | _BV(1)
-	    | _BV(2);
-	  break;
-	case 3:
-	  PORTB = _BV(0)
-	    | _BV(1)
-	    | _BV(2)
-	    | _BV(3);
-	  break;
-	}
+
+      PORTB = ((adc >= 0) << 0)
+       | ((adc >= 32) << 1)
+       | ((adc >= 64) << 2)
+       | ((adc >= 96) << 3)
+       | ((adc >= 128) << 4)
+       | ((adc >= 160) << 5)
+       | ((adc >= 192) << 6)
+       | ((adc >= 224) << 7);
     }
 }
